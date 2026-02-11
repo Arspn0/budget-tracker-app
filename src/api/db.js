@@ -1,6 +1,5 @@
 import * as SQLite from 'expo-sqlite';
 
-// Untuk Expo SDK 51+
 const db = SQLite.openDatabaseSync('budget_tracker.db');
 
 export const initDatabase = async () => {
