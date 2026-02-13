@@ -8,9 +8,10 @@ import {
   ActivityIndicator 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, TrendingUp, TrendingDown, Wallet } from 'lucide-react-native';
+import { Plus, TrendingUp, TrendingDown, Wallet, ChevronRight } from 'lucide-react-native';
 import { Colors } from '../../theme/colors';
 import { Card } from '../../components/Card/Card';
+import { PieChart, BarChart, ProgressBar } from '../../components/Chart';
 import { useTransactionStore } from '../../store/useTransactionStore';
 import { useWalletStore } from '../../store/useWalletStore';
 import { useSavingStore } from '../../store/useSavingStore';
@@ -20,12 +21,15 @@ import { useFocusEffect } from '@react-navigation/native';
 const HomeScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [categoryData, setCategoryData] = useState([]);
+  const [weeklyData, setWeeklyData] = useState([]);
 
   const { 
     transactions, 
     summary, 
     fetchTransactions, 
     fetchSummary,
+    fetchByCategory,
     loading 
   } = useTransactionStore();
   
@@ -39,7 +43,6 @@ const HomeScreen = ({ navigation }) => {
     fetchSavings 
   } = useSavingStore();
 
-  // Fetch data on mount and when screen is focused
   useFocusEffect(
     React.useCallback(() => {
       loadData();
@@ -56,6 +59,17 @@ const HomeScreen = ({ navigation }) => {
         fetchSummary(startDate, endDate),
         fetchSavings(),
       ]);
+
+      // Load category breakdown
+      const categories = await fetchByCategory(startDate, endDate, 'expense');
+      setCategoryData(categories.map(cat => ({
+        name: cat.name,
+        value: cat.total,
+        color: cat.color,
+      })));
+
+      // Generate weekly data (last 7 days)
+      generateWeeklyData();
       
       setIsInitialLoading(false);
     } catch (error) {
@@ -64,13 +78,40 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
+  const generateWeeklyData = () => {
+    const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    const today = new Date();
+    const weekData = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const dayTransactions = transactions.filter(t => t.date === dateStr);
+      const income = dayTransactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
+      const expense = dayTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      weekData.push({
+        label: days[date.getDay()],
+        income,
+        expense,
+      });
+    }
+
+    setWeeklyData(weekData);
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
   };
 
-  // Get today's transactions
   const todayTransactions = transactions.filter(t => {
     const today = new Date().toISOString().split('T')[0];
     return t.date === today;
@@ -114,21 +155,23 @@ const HomeScreen = ({ navigation }) => {
           <Card className="flex-1 mr-2">
             <View className="flex-row items-center mb-2">
               <TrendingUp size={20} color={Colors.success} />
-              <Text className="text-textMuted text-xs ml-2">Pemasukan</Text>
+              <Text className="text-textMuted text-xs ml-2">Bulan Ini</Text>
             </View>
             <Text className="text-success text-lg font-bold">
               {formatCurrency(summary.income)}
             </Text>
+            <Text className="text-textMuted text-xs mt-1">Pemasukan</Text>
           </Card>
 
           <Card className="flex-1 ml-2">
             <View className="flex-row items-center mb-2">
               <TrendingDown size={20} color={Colors.danger} />
-              <Text className="text-textMuted text-xs ml-2">Pengeluaran</Text>
+              <Text className="text-textMuted text-xs ml-2">Bulan Ini</Text>
             </View>
             <Text className="text-danger text-lg font-bold">
               {formatCurrency(summary.expense)}
             </Text>
+            <Text className="text-textMuted text-xs mt-1">Pengeluaran</Text>
           </Card>
         </View>
 
@@ -148,7 +191,7 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
 
         {/* Today's Expense */}
-        <Card className="mb-4">
+        <Card className="mb-6">
           <Text className="text-text font-semibold mb-2">
             Pengeluaran Hari Ini
           </Text>
@@ -156,20 +199,72 @@ const HomeScreen = ({ navigation }) => {
             {formatCurrency(todayExpense)}
           </Text>
           <Text className="text-textMuted text-xs mt-1">
-            {todayTransactions.length} transaksi
+            {todayTransactions.filter(t => t.type === 'expense').length} transaksi
           </Text>
         </Card>
 
+        {/* Weekly Chart */}
+        {weeklyData.length > 0 && (
+          <Card className="mb-6">
+            <BarChart 
+              data={weeklyData}
+              title="Pemasukan vs Pengeluaran (7 Hari Terakhir)"
+            />
+          </Card>
+        )}
+
+        {/* Category Breakdown */}
+        {categoryData.length > 0 && (
+          <Card className="mb-6">
+            <PieChart 
+              data={categoryData}
+              title="Pengeluaran per Kategori (Bulan Ini)"
+            />
+          </Card>
+        )}
+
+        {/* Savings Progress */}
+        {savings.length > 0 && (
+          <Card className="mb-6">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-text font-semibold">
+                Target Tabungan
+              </Text>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('SavingTab')}
+                className="flex-row items-center"
+              >
+                <Text className="text-primary text-sm mr-1">Lihat Semua</Text>
+                <ChevronRight size={16} color={Colors.primary} />
+              </TouchableOpacity>
+            </View>
+
+            {savings.slice(0, 3).map((saving) => (
+              <View key={saving.id} className="mb-4">
+                <ProgressBar
+                  current={saving.current_amount}
+                  target={saving.target_amount}
+                  label={saving.name}
+                  showPercentage={true}
+                  showAmount={true}
+                />
+              </View>
+            ))}
+          </Card>
+        )}
+
         {/* Recent Transactions */}
-        <Card className="mb-4">
+        <Card className="mb-6">
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-text font-semibold">
               Transaksi Terbaru
             </Text>
             <TouchableOpacity 
               onPress={() => navigation.navigate('TransactionTab')}
+              className="flex-row items-center"
             >
-              <Text className="text-primary text-sm">Lihat Semua</Text>
+              <Text className="text-primary text-sm mr-1">Lihat Semua</Text>
+              <ChevronRight size={16} color={Colors.primary} />
             </TouchableOpacity>
           </View>
 
@@ -186,8 +281,11 @@ const HomeScreen = ({ navigation }) => {
           ) : (
             <View>
               {transactions.slice(0, 5).map((transaction, index) => (
-                <View 
+                <TouchableOpacity
                   key={transaction.id}
+                  onPress={() => navigation.navigate('TransactionDetail', {
+                    transactionId: transaction.id
+                  })}
                   className={`flex-row items-center justify-between py-3 ${
                     index !== 0 ? 'border-t border-border' : ''
                   }`}
@@ -197,7 +295,10 @@ const HomeScreen = ({ navigation }) => {
                       {transaction.category_name}
                     </Text>
                     <Text className="text-textMuted text-xs">
-                      {new Date(transaction.date).toLocaleDateString('id-ID')}
+                      {new Date(transaction.date).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                      })}
                     </Text>
                   </View>
                   <Text className={`font-bold ${
@@ -208,42 +309,11 @@ const HomeScreen = ({ navigation }) => {
                     {transaction.type === 'income' ? '+' : '-'}
                     {formatCurrency(transaction.amount)}
                   </Text>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           )}
         </Card>
-
-        {/* Savings Progress */}
-        {savings.length > 0 && (
-          <Card className="mb-6">
-            <Text className="text-text font-semibold mb-3">
-              Target Tabungan
-            </Text>
-            {savings.slice(0, 2).map((saving) => {
-              const progress = (saving.current_amount / saving.target_amount) * 100;
-              return (
-                <View key={saving.id} className="mb-3">
-                  <View className="flex-row justify-between mb-1">
-                    <Text className="text-text text-sm">{saving.name}</Text>
-                    <Text className="text-textMuted text-xs">
-                      {progress.toFixed(0)}%
-                    </Text>
-                  </View>
-                  <View className="h-2 bg-background rounded-full overflow-hidden">
-                    <View 
-                      className="h-full bg-primary rounded-full"
-                      style={{ width: `${Math.min(progress, 100)}%` }}
-                    />
-                  </View>
-                  <Text className="text-textMuted text-xs mt-1">
-                    {formatCurrency(saving.current_amount)} / {formatCurrency(saving.target_amount)}
-                  </Text>
-                </View>
-              );
-            })}
-          </Card>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
