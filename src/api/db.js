@@ -17,7 +17,7 @@ export const initDatabase = async () => {
       );
     `);
 
-    // Categories Table
+    // Categories Table — unique on name+type to prevent duplicates
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS categories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,7 +27,8 @@ export const initDatabase = async () => {
         color TEXT,
         is_custom INTEGER DEFAULT 0,
         parent_id INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(name, type)
       );
     `);
 
@@ -98,37 +99,39 @@ export const initDatabase = async () => {
       );
     `);
 
-    // Insert default categories
+    // ─── Insert default categories (INSERT OR IGNORE prevents duplicates) ───
     const defaultCategories = [
-      // Expense categories
-      { name: 'Makanan & Minuman', type: 'expense', icon: 'utensils', color: '#FF6B6B' },
-      { name: 'Transport', type: 'expense', icon: 'car', color: '#4ECDC4' },
-      { name: 'Belanja', type: 'expense', icon: 'shopping-bag', color: '#95E1D3' },
-      { name: 'Tagihan', type: 'expense', icon: 'receipt', color: '#F38181' },
-      { name: 'Hiburan', type: 'expense', icon: 'film', color: '#AA96DA' },
-      { name: 'Kesehatan', type: 'expense', icon: 'heart', color: '#FCBAD3' },
-      { name: 'Pendidikan', type: 'expense', icon: 'book', color: '#A8D8EA' },
-      { name: 'Lainnya', type: 'expense', icon: 'more-horizontal', color: '#9FA5B4' },
-      
-      // Income categories
-      { name: 'Gaji', type: 'income', icon: 'briefcase', color: '#4CAF50' },
-      { name: 'Bonus', type: 'income', icon: 'gift', color: '#8BC34A' },
-      { name: 'Investasi', type: 'income', icon: 'trending-up', color: '#CDDC39' },
-      { name: 'Lainnya', type: 'income', icon: 'dollar-sign', color: '#9FA5B4' },
+      ['Makanan & Minuman', 'expense', 'utensils',       '#FF6B6B'],
+      ['Transport',         'expense', 'car',             '#4ECDC4'],
+      ['Belanja',           'expense', 'shopping-bag',    '#95E1D3'],
+      ['Tagihan',           'expense', 'receipt',         '#F38181'],
+      ['Hiburan',           'expense', 'film',            '#AA96DA'],
+      ['Kesehatan',         'expense', 'heart',           '#FCBAD3'],
+      ['Pendidikan',        'expense', 'book',            '#A8D8EA'],
+      ['Lainnya',           'expense', 'more-horizontal', '#9FA5B4'],
+      ['Gaji',              'income',  'briefcase',       '#4CAF50'],
+      ['Bonus',             'income',  'gift',            '#8BC34A'],
+      ['Investasi',         'income',  'trending-up',     '#CDDC39'],
+      ['Lainnya',           'income',  'dollar-sign',     '#9FA5B4'],
     ];
 
-    for (const category of defaultCategories) {
+    for (const [name, type, icon, color] of defaultCategories) {
       await db.runAsync(
-        'INSERT OR IGNORE INTO categories (name, type, icon, color, is_custom, parent_id) VALUES (?, ?, ?, ?, 0, NULL)',
-        [category.name, category.type, category.icon, category.color]
+        `INSERT OR IGNORE INTO categories (name, type, icon, color, is_custom, parent_id)
+         VALUES (?, ?, ?, ?, 0, NULL)`,
+        [name, type, icon, color]
       );
     }
 
-    // Insert default wallet
-    await db.runAsync(
-      'INSERT OR IGNORE INTO wallets (id, name, type, balance, icon, color) VALUES (1, ?, ?, 0, ?, ?)',
-      ['Dompet Utama', 'cash', 'wallet', '#3ED6C4']
-    );
+    // Insert default wallet (only if table is empty)
+    const walletCount = await db.getFirstAsync('SELECT COUNT(*) as count FROM wallets');
+    if (walletCount?.count === 0) {
+      await db.runAsync(
+        `INSERT INTO wallets (name, type, balance, icon, color)
+         VALUES (?, ?, 0, ?, ?)`,
+        ['Dompet Utama', 'cash', 'wallet', '#3ED6C4']
+      );
+    }
 
     console.log('✅ Database initialized successfully');
   } catch (error) {
