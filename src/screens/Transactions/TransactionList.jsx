@@ -115,7 +115,8 @@ const TransactionListScreen = ({ navigation }) => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingBottom: 12 }}
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingBottom: 12, height: 50 }}
       >
         {FILTER_OPTIONS.map(f => {
           const active = activeFilter === f.key;
