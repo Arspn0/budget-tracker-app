@@ -1,283 +1,344 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  TouchableOpacity, 
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
   Alert,
-  ActivityIndicator 
+  ActivityIndicator,
+  TextInput as RNTextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowDown, ArrowUp, Calendar } from 'lucide-react-native';
-import { TextInput } from '../../components/Input/TextInput';
+import { ArrowDown, ArrowUp, Calendar, ChevronDown } from 'lucide-react-native';
 import { SolidButton, OutlineButton } from '../../components/Button';
 import { Card } from '../../components/Card/Card';
 import { Colors } from '../../theme/colors';
 import { useTransactionStore } from '../../store/useTransactionStore';
 import { useCategoryStore } from '../../store/useCategoryStore';
 import { useWalletStore } from '../../store/useWalletStore';
+import { formatCurrency } from '../../utils/helpers';
 
 const AddTransactionScreen = ({ navigation }) => {
   const [transactionType, setTransactionType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-  const [selectedWalletId, setSelectedWalletId] = useState(1);
+  const [selectedWalletId, setSelectedWalletId] = useState(null);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // ─── FIX BUG 2: Use ref to ensure fetchCategories only runs ONCE ───
+  const hasFetched = useRef(false);
 
   const { addTransaction } = useTransactionStore();
   const { categories, fetchCategories } = useCategoryStore();
   const { wallets, fetchWallets } = useWalletStore();
 
-  // Fetch categories and wallets on mount
   useEffect(() => {
-    fetchCategories();
-    fetchWallets();
+    if (!hasFetched.current) {
+      hasFetched.current = true;
+      fetchCategories();
+      fetchWallets();
+    }
   }, []);
 
-  // Filter categories by type
-  const filteredCategories = categories.filter(
-    cat => cat.type === transactionType
-  );
-
-  // Auto-select first category
+  // Set default wallet once wallets are loaded
   useEffect(() => {
-    if (filteredCategories.length > 0 && !selectedCategoryId) {
-      setSelectedCategoryId(filteredCategories[0].id);
+    if (wallets.length > 0 && selectedWalletId === null) {
+      setSelectedWalletId(wallets[0].id);
     }
-  }, [filteredCategories]);
+  }, [wallets]);
 
+  // Filter categories by current type — computed, no extra fetch needed
+  const filteredCategories = categories.filter(cat => cat.type === transactionType);
+
+  // Auto-select first category when type changes or categories load
+  useEffect(() => {
+    if (filteredCategories.length > 0) {
+      setSelectedCategoryId(filteredCategories[0].id);
+    } else {
+      setSelectedCategoryId(null);
+    }
+  }, [transactionType, categories]);
+
+  // ─── FIX BUG 4: No Alert before goBack — just navigate directly ───
   const handleSave = async () => {
-    // Validation
     if (!amount || parseFloat(amount) <= 0) {
       Alert.alert('Error', 'Masukkan jumlah yang valid');
       return;
     }
-
     if (!selectedCategoryId) {
       Alert.alert('Error', 'Pilih kategori terlebih dahulu');
       return;
     }
-
     if (!selectedWalletId) {
       Alert.alert('Error', 'Pilih dompet terlebih dahulu');
       return;
     }
 
     setSaving(true);
-
     try {
-      const transaction = {
+      await addTransaction({
         type: transactionType,
         amount: parseFloat(amount),
         category_id: selectedCategoryId,
         wallet_id: selectedWalletId,
-        date: date,
+        date,
         note: note.trim() || null,
         photo_uri: null,
-      };
+      });
 
-      console.log('Saving transaction:', transaction);
-
-      await addTransaction(transaction);
-
-      console.log('Transaction saved successfully');
-
-      Alert.alert(
-        'Berhasil',
-        'Transaksi berhasil disimpan',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      // Go back immediately — no Alert to prevent flickering
+      navigation.goBack();
     } catch (error) {
-      console.error('Error saving transaction:', error);
       Alert.alert('Error', 'Gagal menyimpan transaksi: ' + error.message);
-    } finally {
       setSaving(false);
     }
   };
 
+  const selectedWallet = wallets.find(w => w.id === selectedWalletId);
+
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView className="flex-1 px-5 py-6">
-        {/* Transaction Type Toggle */}
-        <View className="flex-row mb-6">
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* ── Type Toggle ── */}
+        <View style={{ flexDirection: 'row', marginTop: 20, marginBottom: 24, gap: 12 }}>
           <TouchableOpacity
+            style={{
+              flex: 1,
+              backgroundColor: transactionType === 'expense'
+                ? Colors.danger + '20' : Colors.card,
+              borderRadius: 16,
+              padding: 16,
+              alignItems: 'center',
+              borderWidth: 2,
+              borderColor: transactionType === 'expense' ? Colors.danger : 'transparent',
+            }}
             onPress={() => setTransactionType('expense')}
-            className="flex-1 mr-2"
           >
-            <Card className={`items-center py-4 ${
-              transactionType === 'expense' ? 'bg-danger/20 border-2 border-danger' : ''
-            }`}>
-              <ArrowDown 
-                size={24} 
-                color={transactionType === 'expense' ? Colors.danger : Colors.textMuted} 
-              />
-              <Text className={`mt-2 font-semibold ${
-                transactionType === 'expense' ? 'text-danger' : 'text-textMuted'
-              }`}>
-                Pengeluaran
-              </Text>
-            </Card>
+            <ArrowDown
+              size={24}
+              color={transactionType === 'expense' ? Colors.danger : Colors.textMuted}
+            />
+            <Text style={{
+              marginTop: 6,
+              fontWeight: '600',
+              color: transactionType === 'expense' ? Colors.danger : Colors.textMuted,
+            }}>
+              Pengeluaran
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
+            style={{
+              flex: 1,
+              backgroundColor: transactionType === 'income'
+                ? Colors.success + '20' : Colors.card,
+              borderRadius: 16,
+              padding: 16,
+              alignItems: 'center',
+              borderWidth: 2,
+              borderColor: transactionType === 'income' ? Colors.success : 'transparent',
+            }}
             onPress={() => setTransactionType('income')}
-            className="flex-1 ml-2"
           >
-            <Card className={`items-center py-4 ${
-              transactionType === 'income' ? 'bg-success/20 border-2 border-success' : ''
-            }`}>
-              <ArrowUp 
-                size={24} 
-                color={transactionType === 'income' ? Colors.success : Colors.textMuted} 
-              />
-              <Text className={`mt-2 font-semibold ${
-                transactionType === 'income' ? 'text-success' : 'text-textMuted'
-              }`}>
-                Pemasukan
-              </Text>
-            </Card>
+            <ArrowUp
+              size={24}
+              color={transactionType === 'income' ? Colors.success : Colors.textMuted}
+            />
+            <Text style={{
+              marginTop: 6,
+              fontWeight: '600',
+              color: transactionType === 'income' ? Colors.success : Colors.textMuted,
+            }}>
+              Pemasukan
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Amount Input */}
-        <TextInput
-          label="Jumlah"
-          value={amount}
-          onChangeText={setAmount}
-          placeholder="0"
-          keyboardType="numeric"
-          style={{ marginBottom: 16 }}
-        />
-
-        {/* Category Selection */}
-        <View className="mb-4">
-          <Text className="text-text text-sm font-medium mb-2">Kategori</Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            className="mb-2"
-          >
-            {filteredCategories.map((category) => (
-              <TouchableOpacity
-                key={category.id}
-                onPress={() => setSelectedCategoryId(category.id)}
-                className="mr-3"
-              >
-                <Card className={`px-4 py-3 ${
-                  selectedCategoryId === category.id 
-                    ? 'bg-primary/20 border-2 border-primary' 
-                    : ''
-                }`}>
-                  <Text className={`font-medium ${
-                    selectedCategoryId === category.id 
-                      ? 'text-primary' 
-                      : 'text-text'
-                  }`}>
-                    {category.name}
-                  </Text>
-                </Card>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+        {/* ── Amount ── */}
+        <Text style={{ color: Colors.text, fontSize: 14, fontWeight: '600', marginBottom: 8 }}>
+          Jumlah *
+        </Text>
+        <View style={{
+          backgroundColor: Colors.card,
+          borderRadius: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 16,
+          marginBottom: 20,
+          borderWidth: 2,
+          borderColor: amount ? Colors.primary : 'transparent',
+        }}>
+          <Text style={{ color: Colors.textMuted, fontSize: 18, marginRight: 8 }}>Rp</Text>
+          <RNTextInput
+            value={amount}
+            onChangeText={setAmount}
+            placeholder="0"
+            placeholderTextColor={Colors.textMuted}
+            keyboardType="numeric"
+            style={{ flex: 1, color: Colors.text, fontSize: 22, fontWeight: '700', paddingVertical: 16 }}
+          />
         </View>
 
-        {/* Wallet Selection */}
-        <View className="mb-4">
-          <Text className="text-text text-sm font-medium mb-2">Dompet</Text>
-          {wallets.map((wallet) => (
+        {/* ── Category ── */}
+        <Text style={{ color: Colors.text, fontSize: 14, fontWeight: '600', marginBottom: 10 }}>
+          Kategori *
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginBottom: 20 }}
+          contentContainerStyle={{ gap: 10, paddingRight: 4 }}
+        >
+          {filteredCategories.map((cat) => {
+            const isSelected = selectedCategoryId === cat.id;
+            return (
+              <TouchableOpacity
+                key={cat.id}
+                onPress={() => setSelectedCategoryId(cat.id)}
+                style={{
+                  backgroundColor: isSelected ? (cat.color || Colors.primary) + '25' : Colors.card,
+                  borderRadius: 12,
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderWidth: 2,
+                  borderColor: isSelected ? (cat.color || Colors.primary) : 'transparent',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <View style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: cat.color || Colors.primary,
+                }} />
+                <Text style={{
+                  color: isSelected ? Colors.text : Colors.textMuted,
+                  fontWeight: isSelected ? '600' : '400',
+                  fontSize: 14,
+                }}>
+                  {cat.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {/* ── Wallet ── */}
+        <Text style={{ color: Colors.text, fontSize: 14, fontWeight: '600', marginBottom: 10 }}>
+          Dompet *
+        </Text>
+        {wallets.map((wallet) => {
+          const isSelected = selectedWalletId === wallet.id;
+          return (
             <TouchableOpacity
               key={wallet.id}
               onPress={() => setSelectedWalletId(wallet.id)}
-              className="mb-2"
+              style={{ marginBottom: 10 }}
             >
-              <Card className={`flex-row items-center justify-between ${
-                selectedWalletId === wallet.id 
-                  ? 'bg-primary/20 border-2 border-primary' 
-                  : ''
-              }`}>
-                <Text className={`font-medium ${
-                  selectedWalletId === wallet.id 
-                    ? 'text-primary' 
-                    : 'text-text'
-                }`}>
-                  {wallet.name}
-                </Text>
-                <Text className="text-textMuted text-sm">
-                  Saldo: Rp {wallet.balance.toLocaleString('id-ID')}
+              <Card style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: isSelected ? Colors.primary + '15' : Colors.card,
+                borderWidth: 2,
+                borderColor: isSelected ? Colors.primary : 'transparent',
+              }}>
+                <View>
+                  <Text style={{ color: Colors.text, fontWeight: '600' }}>
+                    {wallet.name}
+                  </Text>
+                  <Text style={{ color: Colors.textMuted, fontSize: 12, marginTop: 2 }}>
+                    {wallet.type === 'cash' ? '💵 Cash'
+                      : wallet.type === 'bank' ? '🏦 Bank'
+                      : '📱 E-Wallet'}
+                  </Text>
+                </View>
+                <Text style={{
+                  color: isSelected ? Colors.primary : Colors.text,
+                  fontWeight: '700',
+                }}>
+                  {formatCurrency(wallet.balance)}
                 </Text>
               </Card>
             </TouchableOpacity>
-          ))}
+          );
+        })}
+
+        {/* ── Date ── */}
+        <Text style={{ color: Colors.text, fontSize: 14, fontWeight: '600', marginTop: 8, marginBottom: 10 }}>
+          Tanggal
+        </Text>
+        <View style={{
+          backgroundColor: Colors.card,
+          borderRadius: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 16,
+          marginBottom: 20,
+        }}>
+          <Calendar size={18} color={Colors.primary} />
+          <RNTextInput
+            value={date}
+            onChangeText={setDate}
+            placeholder="YYYY-MM-DD"
+            placeholderTextColor={Colors.textMuted}
+            style={{ flex: 1, color: Colors.text, fontSize: 15, paddingVertical: 14, marginLeft: 10 }}
+          />
         </View>
 
-        {/* Date Input */}
-        <View className="mb-4">
-          <Text className="text-text text-sm font-medium mb-2">Tanggal</Text>
-          <Card className="flex-row items-center">
-            <Calendar size={20} color={Colors.primary} />
-            <Text className="text-text ml-3">
-              {new Date(date).toLocaleDateString('id-ID', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </Text>
-          </Card>
+        {/* ── Note ── */}
+        <Text style={{ color: Colors.text, fontSize: 14, fontWeight: '600', marginBottom: 10 }}>
+          Catatan (Opsional)
+        </Text>
+        <View style={{
+          backgroundColor: Colors.card,
+          borderRadius: 12,
+          paddingHorizontal: 16,
+          marginBottom: 28,
+        }}>
+          <RNTextInput
+            value={note}
+            onChangeText={setNote}
+            placeholder="Tambahkan catatan..."
+            placeholderTextColor={Colors.textMuted}
+            multiline
+            style={{
+              color: Colors.text,
+              fontSize: 15,
+              paddingVertical: 14,
+              minHeight: 80,
+              textAlignVertical: 'top',
+            }}
+          />
         </View>
 
-        {/* Note Input */}
-        <TextInput
-          label="Catatan (Opsional)"
-          value={note}
-          onChangeText={setNote}
-          placeholder="Tambahkan catatan..."
-          multiline
-          style={{ marginBottom: 24 }}
-        />
-
-        {/* Action Buttons */}
-        <View className="flex-row">
-          <View className="flex-1 mr-2">
+        {/* ── Buttons ── */}
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={{ flex: 1 }}>
             <OutlineButton
               title="Batal"
               onPress={() => navigation.goBack()}
               disabled={saving}
             />
           </View>
-          <View className="flex-1 ml-2">
+          <View style={{ flex: 1 }}>
             <SolidButton
-              title={saving ? "Menyimpan..." : "Simpan"}
+              title={saving ? 'Menyimpan...' : 'Simpan'}
               onPress={handleSave}
               disabled={saving}
               loading={saving}
             />
           </View>
         </View>
-
-        {/* Debug Info - Remove in production */}
-        <Card className="mt-4 bg-card/50">
-          <Text className="text-textMuted text-xs">Debug Info:</Text>
-          <Text className="text-textMuted text-xs">
-            Categories: {categories.length} | Filtered: {filteredCategories.length}
-          </Text>
-          <Text className="text-textMuted text-xs">
-            Wallets: {wallets.length}
-          </Text>
-          <Text className="text-textMuted text-xs">
-            Selected Category: {selectedCategoryId}
-          </Text>
-          <Text className="text-textMuted text-xs">
-            Selected Wallet: {selectedWalletId}
-          </Text>
-        </Card>
       </ScrollView>
     </SafeAreaView>
   );
