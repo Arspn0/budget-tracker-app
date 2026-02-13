@@ -1,50 +1,41 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  ScrollView, 
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator 
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, TrendingUp, TrendingDown, Wallet, ChevronRight } from 'lucide-react-native';
-import { Colors } from '../../theme/colors';
+import { useFocusEffect } from '@react-navigation/native';
 import { Card } from '../../components/Card/Card';
 import { PieChart, BarChart, ProgressBar } from '../../components/Chart';
+import { Colors } from '../../theme/colors';
 import { useTransactionStore } from '../../store/useTransactionStore';
 import { useWalletStore } from '../../store/useWalletStore';
 import { useSavingStore } from '../../store/useSavingStore';
+import { TransactionRepository } from '../../data/repositories/TransactionRepository';
 import { formatCurrency, getDateRange } from '../../utils/helpers';
-import { useFocusEffect } from '@react-navigation/native';
 
 const HomeScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [categoryData, setCategoryData] = useState([]);
-  const [weeklyData, setWeeklyData] = useState([]);
 
-  const { 
-    transactions, 
-    summary, 
-    fetchTransactions, 
-    fetchSummary,
-    fetchByCategory,
-    loading 
-  } = useTransactionStore();
-  
-  const { 
-    totalBalance, 
-    fetchWallets 
-  } = useWalletStore();
-  
-  const { 
-    savings, 
-    fetchSavings 
-  } = useSavingStore();
+  // ─── FIX BUG 5 & 6: store chart data separately so it's only set
+  //     AFTER all async calls finish ────────────────────────────────
+  const [categoryData, setCategoryData]  = useState([]);
+  const [weeklyData, setWeeklyData]       = useState([]);
 
+  const { transactions, summary, fetchTransactions, fetchSummary } = useTransactionStore();
+  const { totalBalance, wallets, fetchWallets } = useWalletStore();
+  const { savings, fetchSavings } = useSavingStore();
+
+  // useFocusEffect runs every time the screen comes into focus (e.g. after
+  // returning from AddTransaction), ensuring data is always fresh.
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       loadData();
     }, [])
   );
@@ -52,7 +43,8 @@ const HomeScreen = ({ navigation }) => {
   const loadData = async () => {
     try {
       const { startDate, endDate } = getDateRange('month');
-      
+
+      // ─── FIX BUG 5: Await ALL fetches before deriving chart data ───
       await Promise.all([
         fetchWallets(),
         fetchTransactions(),
@@ -60,50 +52,28 @@ const HomeScreen = ({ navigation }) => {
         fetchSavings(),
       ]);
 
-      // Load category breakdown
-      const categories = await fetchByCategory(startDate, endDate, 'expense');
-      setCategoryData(categories.map(cat => ({
-        name: cat.name,
-        value: cat.total,
-        color: cat.color,
-      })));
+      // Weekly bar-chart — uses its own DB query so it's always accurate
+      const weekly = await TransactionRepository.getWeeklyData();
+      setWeeklyData(weekly);
 
-      // Generate weekly data (last 7 days)
-      generateWeeklyData();
-      
+      // ─── FIX BUG 6: getByCategory groups by c.id so same category
+      //     on different days is ONE slice in the pie chart ───────────
+      const catRows = await TransactionRepository.getByCategory(
+        startDate, endDate, 'expense'
+      );
+      setCategoryData(
+        catRows.map(row => ({
+          name:  row.name,
+          value: row.total,
+          color: row.color || '#9FA5B4',
+        }))
+      );
+
       setIsInitialLoading(false);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading home data:', error);
       setIsInitialLoading(false);
     }
-  };
-
-  const generateWeeklyData = () => {
-    const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-    const today = new Date();
-    const weekData = [];
-
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      const dayTransactions = transactions.filter(t => t.date === dateStr);
-      const income = dayTransactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + t.amount, 0);
-      const expense = dayTransactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
-
-      weekData.push({
-        label: days[date.getDay()],
-        income,
-        expense,
-      });
-    }
-
-    setWeeklyData(weekData);
   };
 
   const onRefresh = async () => {
@@ -112,206 +82,252 @@ const HomeScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  const todayTransactions = transactions.filter(t => {
-    const today = new Date().toISOString().split('T')[0];
-    return t.date === today;
-  });
-
-  const todayExpense = todayTransactions
-    .filter(t => t.type === 'expense')
+  // Today's transactions from already-loaded list
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayExpense = transactions
+    .filter(t => t.date === todayStr && t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
+  const todayCount = transactions.filter(
+    t => t.date === todayStr && t.type === 'expense'
+  ).length;
 
   if (isInitialLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text className="text-textMuted mt-4">Memuat data...</Text>
+        <Text style={{ color: Colors.textMuted, marginTop: 12 }}>Memuat data...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView 
-        className="flex-1 px-5"
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
+          <RefreshControl
+            refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={Colors.primary}
           />
         }
       >
-        {/* Header */}
-        <View className="py-6">
-          <Text className="text-textMuted text-sm">Total Saldo</Text>
-          <Text className="text-text text-4xl font-bold mt-1">
+        {/* ── Header / Total Balance ── */}
+        <View style={{ paddingTop: 28, paddingBottom: 20 }}>
+          <Text style={{ color: Colors.textMuted, fontSize: 13 }}>Total Saldo</Text>
+          <Text style={{ color: Colors.text, fontSize: 36, fontWeight: '800', marginTop: 4 }}>
             {formatCurrency(totalBalance)}
           </Text>
+
+          {/* Wallet chips */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
+            {wallets.map(w => (
+              <View
+                key={w.id}
+                style={{
+                  backgroundColor: Colors.card,
+                  borderRadius: 20,
+                  paddingHorizontal: 14,
+                  paddingVertical: 6,
+                  marginRight: 8,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <Text style={{ fontSize: 13 }}>
+                  {w.type === 'cash' ? '💵' : w.type === 'bank' ? '🏦' : '📱'}
+                </Text>
+                <Text style={{ color: Colors.textMuted, fontSize: 12 }}>{w.name}</Text>
+                <Text style={{ color: Colors.text, fontSize: 12, fontWeight: '700' }}>
+                  {formatCurrency(w.balance)}
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
         </View>
 
-        {/* Summary Cards */}
-        <View className="flex-row mb-6">
-          <Card className="flex-1 mr-2">
-            <View className="flex-row items-center mb-2">
-              <TrendingUp size={20} color={Colors.success} />
-              <Text className="text-textMuted text-xs ml-2">Bulan Ini</Text>
+        {/* ── Monthly Summary Cards ── */}
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
+          <Card style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+              <TrendingUp size={16} color={Colors.success} />
+              <Text style={{ color: Colors.textMuted, fontSize: 11, marginLeft: 6 }}>
+                Pemasukan
+              </Text>
             </View>
-            <Text className="text-success text-lg font-bold">
+            <Text style={{ color: Colors.success, fontSize: 16, fontWeight: '700' }}>
               {formatCurrency(summary.income)}
             </Text>
-            <Text className="text-textMuted text-xs mt-1">Pemasukan</Text>
+            <Text style={{ color: Colors.textMuted, fontSize: 10, marginTop: 2 }}>Bulan ini</Text>
           </Card>
 
-          <Card className="flex-1 ml-2">
-            <View className="flex-row items-center mb-2">
-              <TrendingDown size={20} color={Colors.danger} />
-              <Text className="text-textMuted text-xs ml-2">Bulan Ini</Text>
+          <Card style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+              <TrendingDown size={16} color={Colors.danger} />
+              <Text style={{ color: Colors.textMuted, fontSize: 11, marginLeft: 6 }}>
+                Pengeluaran
+              </Text>
             </View>
-            <Text className="text-danger text-lg font-bold">
+            <Text style={{ color: Colors.danger, fontSize: 16, fontWeight: '700' }}>
               {formatCurrency(summary.expense)}
             </Text>
-            <Text className="text-textMuted text-xs mt-1">Pengeluaran</Text>
+            <Text style={{ color: Colors.textMuted, fontSize: 10, marginTop: 2 }}>Bulan ini</Text>
           </Card>
         </View>
 
-        {/* Quick Action - Tambah Transaksi */}
-        <TouchableOpacity 
-          className="mb-6"
+        {/* ── FAB – Tambah Transaksi ── */}
+        <TouchableOpacity
           onPress={() => navigation.navigate('AddTransaction')}
+          style={{ marginBottom: 20 }}
         >
-          <Card className="bg-primary">
-            <View className="flex-row items-center justify-center py-2">
-              <Plus size={24} color={Colors.text} />
-              <Text className="text-text text-lg font-bold ml-2">
+          <Card style={{ backgroundColor: Colors.primary }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 4 }}>
+              <Plus size={22} color={Colors.text} />
+              <Text style={{ color: Colors.text, fontSize: 16, fontWeight: '700', marginLeft: 8 }}>
                 Tambah Transaksi
               </Text>
             </View>
           </Card>
         </TouchableOpacity>
 
-        {/* Today's Expense */}
-        <Card className="mb-6">
-          <Text className="text-text font-semibold mb-2">
-            Pengeluaran Hari Ini
-          </Text>
-          <Text className="text-danger text-2xl font-bold">
+        {/* ── Pengeluaran Hari Ini ── */}
+        <Card style={{ marginBottom: 20 }}>
+          <Text style={{ color: Colors.textMuted, fontSize: 13 }}>Pengeluaran Hari Ini</Text>
+          <Text style={{ color: Colors.danger, fontSize: 26, fontWeight: '800', marginTop: 4 }}>
             {formatCurrency(todayExpense)}
           </Text>
-          <Text className="text-textMuted text-xs mt-1">
-            {todayTransactions.filter(t => t.type === 'expense').length} transaksi
+          <Text style={{ color: Colors.textMuted, fontSize: 12, marginTop: 2 }}>
+            {todayCount} transaksi
           </Text>
         </Card>
 
-        {/* Weekly Chart */}
+        {/* ── FIX BUG 5: Weekly Bar Chart ── */}
         {weeklyData.length > 0 && (
-          <Card className="mb-6">
-            <BarChart 
+          <Card style={{ marginBottom: 20 }}>
+            <BarChart
               data={weeklyData}
-              title="Pemasukan vs Pengeluaran (7 Hari Terakhir)"
+              title="7 Hari Terakhir"
             />
           </Card>
         )}
 
-        {/* Category Breakdown */}
+        {/* ── FIX BUG 6: Category Pie Chart ── */}
         {categoryData.length > 0 && (
-          <Card className="mb-6">
-            <PieChart 
+          <Card style={{ marginBottom: 20 }}>
+            <PieChart
               data={categoryData}
-              title="Pengeluaran per Kategori (Bulan Ini)"
+              title="Pengeluaran per Kategori"
             />
           </Card>
         )}
 
-        {/* Savings Progress */}
+        {/* ── Savings Progress ── */}
         {savings.length > 0 && (
-          <Card className="mb-6">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-text font-semibold">
+          <Card style={{ marginBottom: 20 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <Text style={{ color: Colors.text, fontSize: 16, fontWeight: '700' }}>
                 Target Tabungan
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => navigation.navigate('SavingTab')}
-                className="flex-row items-center"
+                style={{ flexDirection: 'row', alignItems: 'center' }}
               >
-                <Text className="text-primary text-sm mr-1">Lihat Semua</Text>
+                <Text style={{ color: Colors.primary, fontSize: 13 }}>Lihat Semua</Text>
                 <ChevronRight size={16} color={Colors.primary} />
               </TouchableOpacity>
             </View>
-
-            {savings.slice(0, 3).map((saving) => (
-              <View key={saving.id} className="mb-4">
+            {savings.slice(0, 3).map(saving => (
+              <View key={saving.id} style={{ marginBottom: 14 }}>
                 <ProgressBar
                   current={saving.current_amount}
                   target={saving.target_amount}
                   label={saving.name}
-                  showPercentage={true}
-                  showAmount={true}
+                  color={saving.color || Colors.primary}
+                  height={8}
                 />
               </View>
             ))}
           </Card>
         )}
 
-        {/* Recent Transactions */}
-        <Card className="mb-6">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-text font-semibold">
+        {/* ── Recent Transactions ── */}
+        <Card style={{ marginBottom: 20 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <Text style={{ color: Colors.text, fontSize: 16, fontWeight: '700' }}>
               Transaksi Terbaru
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => navigation.navigate('TransactionTab')}
-              className="flex-row items-center"
+              style={{ flexDirection: 'row', alignItems: 'center' }}
             >
-              <Text className="text-primary text-sm mr-1">Lihat Semua</Text>
+              <Text style={{ color: Colors.primary, fontSize: 13 }}>Lihat Semua</Text>
               <ChevronRight size={16} color={Colors.primary} />
             </TouchableOpacity>
           </View>
 
           {transactions.length === 0 ? (
-            <View className="py-8 items-center">
-              <Wallet size={48} color={Colors.textMuted} />
-              <Text className="text-textMuted mt-3">
+            <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+              <Wallet size={44} color={Colors.textMuted} />
+              <Text style={{ color: Colors.textMuted, marginTop: 12 }}>
                 Belum ada transaksi
-              </Text>
-              <Text className="text-textMuted text-xs">
-                Tambahkan transaksi pertama Anda
               </Text>
             </View>
           ) : (
-            <View>
-              {transactions.slice(0, 5).map((transaction, index) => (
-                <TouchableOpacity
-                  key={transaction.id}
-                  onPress={() => navigation.navigate('TransactionDetail', {
-                    transactionId: transaction.id
-                  })}
-                  className={`flex-row items-center justify-between py-3 ${
-                    index !== 0 ? 'border-t border-border' : ''
-                  }`}
-                >
-                  <View className="flex-1">
-                    <Text className="text-text font-medium">
-                      {transaction.category_name}
-                    </Text>
-                    <Text className="text-textMuted text-xs">
-                      {new Date(transaction.date).toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                    </Text>
-                  </View>
-                  <Text className={`font-bold ${
-                    transaction.type === 'income' 
-                      ? 'text-success' 
-                      : 'text-danger'
-                  }`}>
-                    {transaction.type === 'income' ? '+' : '-'}
-                    {formatCurrency(transaction.amount)}
+            transactions.slice(0, 5).map((tx, idx) => (
+              <TouchableOpacity
+                key={tx.id}
+                onPress={() => navigation.navigate('TransactionDetail', { transactionId: tx.id })}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingVertical: 12,
+                  borderTopWidth: idx !== 0 ? 1 : 0,
+                  borderTopColor: '#2A2D35',
+                }}
+              >
+                {/* Category color dot */}
+                <View style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 19,
+                  backgroundColor: (tx.category_color || Colors.primary) + '25',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 12,
+                }}>
+                  <View style={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: 6,
+                    backgroundColor: tx.category_color || Colors.primary,
+                  }} />
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: Colors.text, fontWeight: '600', fontSize: 14 }}>
+                    {tx.category_name || 'Tidak ada kategori'}
                   </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                  <Text style={{ color: Colors.textMuted, fontSize: 12, marginTop: 1 }}>
+                    {tx.wallet_name} ·{' '}
+                    {new Date(tx.date).toLocaleDateString('id-ID', {
+                      day: 'numeric', month: 'short',
+                    })}
+                  </Text>
+                </View>
+
+                <Text style={{
+                  fontWeight: '700',
+                  fontSize: 15,
+                  color: tx.type === 'income' ? Colors.success : Colors.danger,
+                }}>
+                  {tx.type === 'income' ? '+' : '−'}
+                  {formatCurrency(tx.amount)}
+                </Text>
+              </TouchableOpacity>
+            ))
           )}
         </Card>
       </ScrollView>
