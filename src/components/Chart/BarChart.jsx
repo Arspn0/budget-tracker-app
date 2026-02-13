@@ -16,8 +16,7 @@ export const BarChart = ({ data = [], title }) => {
     );
   }
 
-  // react-native-chart-kit BarChart hanya support 1 dataset,
-  // jadi kita tampilkan expense saja, income di bawahnya terpisah
+  // react-native-chart-kit BarChart (only support 1 dataset)
   const expenseData = {
     labels: data.map(d => d.label),
     datasets: [
