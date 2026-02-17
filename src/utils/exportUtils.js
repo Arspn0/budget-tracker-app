@@ -1,6 +1,5 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-// ✅ FIX: import dari /legacy agar moveAsync & writeAsStringAsync tetap bekerja
 import * as FileSystem from 'expo-file-system/legacy';
 import Papa from 'papaparse';
 
@@ -223,11 +222,11 @@ export const exportPDF = async ({ transactions, summary, categoryBreakdown, wall
     // Print to temp file
     const { uri } = await Print.printToFileAsync({ html, base64: false });
 
-    // ✅ Build destination path
+    // Build destination path
     const period = `${year}-${String(month).padStart(2, '0')}`;
     const dest   = `${FileSystem.documentDirectory}laporan-keuangan-${period}.pdf`;
 
-    // ✅ moveAsync from legacy — still works fine
+    // moveAsync from legacy — still works fine
     await FileSystem.moveAsync({ from: uri, to: dest });
 
     const canShare = await Sharing.isAvailableAsync();
