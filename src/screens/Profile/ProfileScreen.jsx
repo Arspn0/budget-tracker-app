@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   User, Tag, Wallet, Shield, Moon, Sun,
   Bell, ChevronRight, HelpCircle, LogOut,
-  Database, TrendingDown,
+  Database, TrendingDown, FileText, CalendarDays
 } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
 import { Colors } from '../../theme/colors';
@@ -57,14 +57,14 @@ const ProfileScreen = ({ navigation }) => {
       title: 'Laporan & Kalender',
       items: [
         {
-          icon: FileText,          // import FileText from 'lucide-react-native'
+          icon: FileText,
           label: 'Laporan Keuangan',
           subtitle: 'Export PDF & CSV',
           onPress: () => navigation.navigate('Report'),
           iconColor: Colors.danger,
         },
         {
-          icon: CalendarDays,      // import CalendarDays from 'lucide-react-native'
+          icon: CalendarDays,
           label: 'Kalender Finansial',
           subtitle: 'Lihat transaksi per hari',
           onPress: () => navigation.navigate('FinancialCalendar'),
