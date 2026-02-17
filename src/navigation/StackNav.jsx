@@ -13,6 +13,8 @@ import AddSavingScreen from '../screens/Savings/AddSaving';
 import AddBudgetScreen from '../screens/Budget/AddBudgetScreen';
 import CategoryManagerScreen from '../screens/Profile/CategoryManagerScreen';
 import WalletManagerScreen from '../screens/Profile/WalletManagerScreen';
+import ReportScreen from '../screens/Report/ReportScreen';
+import FinancialCalendarScreen from '../screens/Calendar/FinancialCalendarScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -92,6 +94,18 @@ const StackNav = () => {
         name="WalletManager" 
         component={WalletManagerScreen}
         options={{ title: 'Kelola Dompet' }}
+      />
+
+      {/* Report & Calendar */}
+      <Stack.Screen
+        name="Report"
+        component={ReportScreen}
+        options={{ title: 'Laporan Keuangan' }}
+      />
+      <Stack.Screen
+        name="FinancialCalendar"
+        component={FinancialCalendarScreen}
+        options={{ title: 'Kalender Finansial' }}
       />
     </Stack.Navigator>
   );
