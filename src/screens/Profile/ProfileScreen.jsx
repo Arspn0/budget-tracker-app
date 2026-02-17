@@ -54,6 +54,25 @@ const ProfileScreen = ({ navigation }) => {
       ],
     },
     {
+      title: 'Laporan & Kalender',
+      items: [
+        {
+          icon: FileText,          // import FileText from 'lucide-react-native'
+          label: 'Laporan Keuangan',
+          subtitle: 'Export PDF & CSV',
+          onPress: () => navigation.navigate('Report'),
+          iconColor: Colors.danger,
+        },
+        {
+          icon: CalendarDays,      // import CalendarDays from 'lucide-react-native'
+          label: 'Kalender Finansial',
+          subtitle: 'Lihat transaksi per hari',
+          onPress: () => navigation.navigate('FinancialCalendar'),
+          iconColor: '#4ECDC4',
+        },
+      ],
+    },
+    {
       title: 'Preferensi',
       items: [
         {
