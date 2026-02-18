@@ -10,13 +10,14 @@ import {
 } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
 import { ProgressBar } from '../../components/Chart';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../store/useTheme';
 import { TransactionRepository } from '../../data/repositories/TransactionRepository';
 import { useWalletStore } from '../../store/useWalletStore';
 import { formatCurrency } from '../../utils/helpers';
 import { exportPDF, exportCSV } from '../../utils/exportUtils';
 
 const ReportScreen = () => {
+  const Colors = useTheme();
   const now = new Date();
   const [month, setMonth]                   = useState(now.getMonth() + 1);
   const [year, setYear]                     = useState(now.getFullYear());

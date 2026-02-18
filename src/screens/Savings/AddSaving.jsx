@@ -12,7 +12,7 @@ import { Calendar, PiggyBank } from 'lucide-react-native';
 import { TextInput } from '../../components/Input/TextInput';
 import { SolidButton, OutlineButton } from '../../components/Button';
 import { Card } from '../../components/Card/Card';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../store/useTheme';
 import { useSavingStore } from '../../store/useSavingStore';
 
 const SAVING_COLORS = [
@@ -21,6 +21,7 @@ const SAVING_COLORS = [
 ];
 
 const AddSavingScreen = ({ navigation }) => {
+  const Colors = useTheme();
   const [name, setName] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
   const [deadline, setDeadline] = useState('');

@@ -12,13 +12,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowDown, ArrowUp, Calendar, ChevronDown } from 'lucide-react-native';
 import { SolidButton, OutlineButton } from '../../components/Button';
 import { Card } from '../../components/Card/Card';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../store/useTheme';
 import { useTransactionStore } from '../../store/useTransactionStore';
 import { useCategoryStore } from '../../store/useCategoryStore';
 import { useWalletStore } from '../../store/useWalletStore';
 import { formatCurrency } from '../../utils/helpers';
 
 const AddTransactionScreen = ({ navigation }) => {
+  const Colors = useTheme();
   const [transactionType, setTransactionType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);

@@ -14,7 +14,7 @@ import {
   Database, TrendingDown, FileText, CalendarDays
 } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../store/useTheme';
 import { useWalletStore } from '../../store/useWalletStore';
 import { useAppStore } from '../../store/useAppStore';
 import { formatCurrency } from '../../utils/helpers';
@@ -22,6 +22,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSecurityStore } from '../../store/useSecurityStore';
 
 const ProfileScreen = ({ navigation }) => {
+  const Colors = useTheme();
   const { isPinSet } = useSecurityStore();
 
   const { wallets, totalBalance, fetchWallets } = useWalletStore();
