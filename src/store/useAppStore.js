@@ -1,21 +1,39 @@
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const useAppStore = create((set) => ({
-  // UI State
+const THEME_KEY = 'app_theme_mode';
+
+export const useAppStore = create((set, get) => ({
+  // Default Theme
   isDarkMode: true,
-  isLoading: false,
   
-  // Set dark mode
-  setDarkMode: (isDark) => set({ isDarkMode: isDark }),
-  
-  // Set loading
-  setLoading: (loading) => set({ isLoading: loading }),
-  
-  // Date filters
-  selectedDateRange: 'month', // 'day', 'week', 'month', 'year'
-  setDateRange: (range) => set({ selectedDateRange: range }),
-  
-  // Active wallet
-  activeWalletId: 1,
+  // Init: load saved theme preference
+  initTheme: async () => {
+    try {
+      const saved = await AsyncStorage.getItem(THEME_KEY);
+      if (saved !== null) {
+        set({ isDarkMode: saved === 'dark' });
+      }
+    } catch (e) {
+      console.error('Error loading theme:', e);
+    }
+  },
+
+  // Toggle theme
+  setDarkMode: async (isDark) => {
+    try {
+      await AsyncStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+      set({ isDarkMode: isDark });
+    } catch (e) {
+      console.error('Error saving theme:', e);
+    }
+  },
+
+  // Date range filter (for reports)
+  dateRange: 'month',
+  setDateRange: (range) => set({ dateRange: range }),
+
+  // Active wallet filter
+  activeWalletId: null,
   setActiveWallet: (id) => set({ activeWalletId: id }),
 }));
