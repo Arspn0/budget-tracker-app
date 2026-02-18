@@ -15,6 +15,8 @@ import CategoryManagerScreen from '../screens/Profile/CategoryManagerScreen';
 import WalletManagerScreen from '../screens/Profile/WalletManagerScreen';
 import ReportScreen from '../screens/Report/ReportScreen';
 import FinancialCalendarScreen from '../screens/Calendar/FinancialCalendarScreen';
+import SecurityScreen from '../screens/Security/SecurityScreen';
+import { SetupPinScreen } from '../screens/Security/SetupPinScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -106,6 +108,18 @@ const StackNav = () => {
         name="FinancialCalendar"
         component={FinancialCalendarScreen}
         options={{ title: 'Kalender Finansial' }}
+      />
+
+      {/* Security & Setup Pin */}
+      <Stack.Screen
+        name="Security"
+        component={SecurityScreen}
+        options={{ title: 'Keamanan' }} 
+      />
+      <Stack.Screen
+        name="SetupPin"
+        component={SetupPinScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
