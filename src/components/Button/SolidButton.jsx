@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator } from 'react-native';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 
 export const SolidButton = ({ 
   title, 

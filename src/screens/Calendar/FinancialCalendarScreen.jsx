@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 import { TransactionRepository } from '../../data/repositories/TransactionRepository';
 import { formatCurrency } from '../../utils/helpers';
 

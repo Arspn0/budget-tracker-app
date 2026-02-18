@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 
 // Bottom Tab Navigator
 import BottomNav from './BottomNav';
@@ -22,7 +22,7 @@ const Stack = createNativeStackNavigator();
 
 const StackNav = () => {
   const Colors = useTheme();
-
+  
   return (
     <Stack.Navigator
       screenOptions={{

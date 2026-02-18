@@ -14,7 +14,7 @@ import {
   Database, TrendingDown, FileText, CalendarDays
 } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 import { useWalletStore } from '../../store/useWalletStore';
 import { useAppStore } from '../../store/useAppStore';
 import { formatCurrency } from '../../utils/helpers';

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
 import { ProgressBar } from '../../components/Chart';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 import { TransactionRepository } from '../../data/repositories/TransactionRepository';
 import { useWalletStore } from '../../store/useWalletStore';
 import { formatCurrency } from '../../utils/helpers';

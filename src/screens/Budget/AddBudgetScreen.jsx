@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SolidButton, OutlineButton } from '../../components/Button';
 import { Card } from '../../components/Card/Card';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 import { useBudgetStore } from '../../store/useBudgetStore';
 import { useCategoryStore } from '../../store/useCategoryStore';
 import { formatCurrency } from '../../utils/helpers';

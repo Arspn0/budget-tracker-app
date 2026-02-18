@@ -8,7 +8,7 @@ import {
   Wallet, 
   User 
 } from 'lucide-react-native';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 
 // Import Screens
 import HomeScreen from '../screens/Home/HomeScreen';
@@ -21,7 +21,7 @@ const Tab = createBottomTabNavigator();
 
 const BottomNav = () => {
   const Colors = useTheme();
-
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

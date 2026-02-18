@@ -16,7 +16,7 @@ import {
 } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
 import { SolidButton, OutlineButton } from '../../components/Button';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 import { useTransactionStore } from '../../store/useTransactionStore';
 import { useCategoryStore } from '../../store/useCategoryStore';
 import { useWalletStore } from '../../store/useWalletStore';
@@ -25,7 +25,6 @@ import { formatCurrency } from '../../utils/helpers';
 
 const TransactionDetailScreen = ({ route, navigation }) => {
   const Colors = useTheme();
-
   const { transactionId } = route.params;
 
   const [transaction, setTransaction]       = useState(null);

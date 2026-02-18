@@ -5,12 +5,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Fingerprint, Lock, ChevronRight } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 import { useSecurityStore } from '../../store/useSecurityStore';
 
 const SecurityScreen = ({ navigation }) => {
   const Colors = useTheme();
-
+  
   const {
     isPinSet,
     isBiometricEnabled,

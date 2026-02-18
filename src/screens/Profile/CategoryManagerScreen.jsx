@@ -7,8 +7,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Trash2, Lock } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
 import { SolidButton, OutlineButton } from '../../components/Button';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 import { useCategoryStore } from '../../store/useCategoryStore';
+
+const Colors = useTheme();
 
 const CAT_COLORS = [
   '#FF6B6B', '#4ECDC4', '#AA96DA', '#F38181',

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 
 export const ProgressBar = ({
   current = 0,

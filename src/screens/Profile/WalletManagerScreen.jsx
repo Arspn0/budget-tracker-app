@@ -7,9 +7,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Trash2, Edit2, X } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
 import { SolidButton, OutlineButton } from '../../components/Button';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 import { useWalletStore } from '../../store/useWalletStore';
 import { formatCurrency } from '../../utils/helpers';
+
+const Colors = useTheme();
 
 const WALLET_TYPES = [
   { key: 'cash',    label: 'Cash',     emoji: '💵' },

@@ -12,7 +12,7 @@ import { Plus, TrendingUp, TrendingDown, Wallet, ChevronRight } from 'lucide-rea
 import { useFocusEffect } from '@react-navigation/native';
 import { Card } from '../../components/Card/Card';
 import { PieChart, BarChart, ProgressBar } from '../../components/Chart';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 import { useTransactionStore } from '../../store/useTransactionStore';
 import { useWalletStore } from '../../store/useWalletStore';
 import { useSavingStore } from '../../store/useSavingStore';

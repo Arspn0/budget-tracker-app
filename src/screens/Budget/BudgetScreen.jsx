@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Wallet, AlertTriangle, CheckCircle, Trash2 } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
 import { ProgressBar } from '../../components/Chart';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 import { useBudgetStore } from '../../store/useBudgetStore';
 import { formatCurrency } from '../../utils/helpers';
 import { useFocusEffect } from '@react-navigation/native';

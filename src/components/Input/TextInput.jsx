@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput as RNTextInput, Text } from 'react-native';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 
 export const TextInput = ({ 
   label, 

@@ -17,9 +17,11 @@ import {
 import { Card } from '../../components/Card/Card';
 import { ProgressBar } from '../../components/Chart';
 import { SolidButton, OutlineButton } from '../../components/Button';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 import { useSavingStore } from '../../store/useSavingStore';
 import { formatCurrency } from '../../utils/helpers';
+
+const Colors = useTheme();
 
 const TransactionModal = ({ visible, type, onClose, onConfirm }) => {
   const [amount, setAmount] = useState('');

@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Animated, Vibration, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Delete, ArrowLeft } from 'lucide-react-native';
-import { useTheme } from '../../theme/useTheme';
+import { useTheme } from '../store/useTheme';
 import { useSecurityStore } from '../../store/useSecurityStore';
+
+const Colors = useTheme();
 
 const PIN_LENGTH = 4;
 const Dot = ({ filled }) => (
