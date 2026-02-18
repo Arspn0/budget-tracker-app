@@ -147,7 +147,7 @@ const ProfileScreen = ({ navigation }) => {
           subtitle: 'Versi 1.0.0',
           onPress: () => Alert.alert(
             'Budget Tracker',
-            'Versi 1.0.0\nDibuat dengan ❤️ menggunakan React Native + Expo',
+            'Versi 1.0.0\nDibuat oleh Aris Sopian menggunakan React Native + Expo',
             [{ text: 'OK' }]
           ),
           iconColor: Colors.textMuted,
