@@ -1,5 +1,5 @@
 import { useAppStore } from '../store/useAppStore';
-import { DarkColors, LightColors } from './colors';
+import { DarkColors, LightColors } from '../theme/colors';
 
 export const useTheme = () => {
   const isDarkMode = useAppStore((state) => state.isDarkMode);
