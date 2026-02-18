@@ -19,8 +19,11 @@ import { useWalletStore } from '../../store/useWalletStore';
 import { useAppStore } from '../../store/useAppStore';
 import { formatCurrency } from '../../utils/helpers';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSecurityStore } from '../../store/useSecurityStore';
 
 const ProfileScreen = ({ navigation }) => {
+  const { isPinSet } = useSecurityStore();
+
   const { wallets, totalBalance, fetchWallets } = useWalletStore();
   const { isDarkMode, setDarkMode }             = useAppStore();
   const [notifEnabled, setNotifEnabled]         = useState(true);
