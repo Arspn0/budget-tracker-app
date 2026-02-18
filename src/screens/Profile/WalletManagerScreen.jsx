@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Trash2, Edit2, X } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
 import { SolidButton, OutlineButton } from '../../components/Button';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/useTheme';
 import { useWalletStore } from '../../store/useWalletStore';
 import { formatCurrency } from '../../utils/helpers';
 
@@ -206,6 +206,7 @@ const WalletForm = ({ visible, onClose, onSave, initial }) => {
 };
 
 const WalletManagerScreen = () => {
+  const Colors = useTheme();
   const [showForm, setShowForm]     = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const hasFetched = useRef(false);

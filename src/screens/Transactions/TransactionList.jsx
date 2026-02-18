@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Search, Filter, Wallet } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/useTheme';
 import { useTransactionStore } from '../../store/useTransactionStore';
 import { formatCurrency } from '../../utils/helpers';
 import { useFocusEffect } from '@react-navigation/native';
@@ -19,6 +19,8 @@ const FILTER_OPTIONS = [
 ];
 
 const TransactionListScreen = ({ navigation }) => {
+  const Colors = useTheme();
+
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
 

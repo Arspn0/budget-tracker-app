@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Trash2, Lock } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
 import { SolidButton, OutlineButton } from '../../components/Button';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/useTheme';
 import { useCategoryStore } from '../../store/useCategoryStore';
 
 const CAT_COLORS = [
@@ -138,6 +138,7 @@ const AddCategoryModal = ({ visible, onClose, onSave, type }) => {
 };
 
 const CategoryManagerScreen = () => {
+  const Colors = useTheme();
   const [activeTab, setActiveTab]   = useState('expense');
   const [showModal, setShowModal]   = useState(false);
   const hasFetched = useRef(false);

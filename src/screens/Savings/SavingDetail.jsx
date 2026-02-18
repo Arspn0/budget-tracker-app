@@ -17,7 +17,7 @@ import {
 import { Card } from '../../components/Card/Card';
 import { ProgressBar } from '../../components/Chart';
 import { SolidButton, OutlineButton } from '../../components/Button';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/useTheme';
 import { useSavingStore } from '../../store/useSavingStore';
 import { formatCurrency } from '../../utils/helpers';
 
@@ -160,6 +160,7 @@ const TransactionModal = ({ visible, type, onClose, onConfirm }) => {
 };
 
 const SavingDetailScreen = ({ route, navigation }) => {
+  const Colors = useTheme();
   const { savingId } = route.params;
   const [saving, setSaving] = useState(null);
   const [transactions, setTransactions] = useState([]);

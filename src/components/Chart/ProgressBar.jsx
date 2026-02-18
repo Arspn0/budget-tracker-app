@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/useTheme';
 
 export const ProgressBar = ({
   current = 0,
@@ -11,6 +11,7 @@ export const ProgressBar = ({
   color = Colors.primary,
   height = 8,
 }) => {
+  const Colors = useTheme();
   const percentage = target > 0 ? Math.min((current / target) * 100, 100) : 0;
 
   const getStatusColor = () => {

@@ -11,12 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, PiggyBank, Target, Calendar, Trash2 } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
 import { ProgressBar } from '../../components/Chart';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/useTheme';
 import { useSavingStore } from '../../store/useSavingStore';
 import { formatCurrency } from '../../utils/helpers';
 import { useFocusEffect } from '@react-navigation/native';
 
 const SavingsScreen = ({ navigation }) => {
+  const Colors = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const { savings, fetchSavings, deleteSaving } = useSavingStore();
 

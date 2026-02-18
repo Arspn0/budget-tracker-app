@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/useTheme';
 
 export const SolidButton = ({ 
   title, 
@@ -12,6 +12,8 @@ export const SolidButton = ({
   style,
   textStyle 
 }) => {
+  const Colors = useTheme();
+
   const variants = {
     primary: 'bg-primary',
     danger: 'bg-danger',

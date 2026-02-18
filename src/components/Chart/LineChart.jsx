@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, Dimensions } from 'react-native';
 import { LineChart as RNLineChart } from 'react-native-chart-kit';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/useTheme';
 
 const { width } = Dimensions.get('window');
 
 export const LineChart = ({ data = [], title, color = Colors.primary }) => {
+  const Colors = useTheme();
+
   if (!data || data.length === 0) {
     return (
       <View style={{ alignItems: 'center', paddingVertical: 32 }}>

@@ -6,13 +6,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/useTheme';
 import { TransactionRepository } from '../../data/repositories/TransactionRepository';
 import { formatCurrency } from '../../utils/helpers';
 
 const DAY_LABELS = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
 const FinancialCalendarScreen = ({ navigation }) => {
+  const Colors = useTheme();
   const now = new Date();
   const [month, setMonth]                 = useState(now.getMonth() + 1);
   const [year, setYear]                   = useState(now.getFullYear());

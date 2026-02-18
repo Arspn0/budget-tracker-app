@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Dimensions } from 'react-native';
 import { PieChart as RNPieChart } from 'react-native-chart-kit';
-import { Colors } from '../../theme/colors';
+import { useTheme } from '../../theme/useTheme';
 
 const { width } = Dimensions.get('window');
 
@@ -11,6 +11,8 @@ const FALLBACK_COLORS = [
 ];
 
 export const PieChart = ({ data = [], title }) => {
+  const Colors = useTheme();
+
   if (!data || data.length === 0) {
     return (
       <View style={{ alignItems: 'center', paddingVertical: 32 }}>
