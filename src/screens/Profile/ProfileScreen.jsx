@@ -125,8 +125,8 @@ const ProfileScreen = ({ navigation }) => {
         {
           icon: Shield,
           label: 'Keamanan',
-          subtitle: 'PIN & Biometric',
-          onPress: () => Alert.alert('Coming Soon', 'Fitur keamanan akan segera hadir'),
+          subtitle: isPinSet ? 'PIN Aktif' : 'Belum ada PIN',
+          onPress: () => navigation.navigate('Security'),
           iconColor: Colors.danger,
         },
         {
