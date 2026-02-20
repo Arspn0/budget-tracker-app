@@ -11,13 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Wallet, AlertTriangle, CheckCircle, Trash2 } from 'lucide-react-native';
 import { Card } from '../../components/Card/Card';
 import { ProgressBar } from '../../components/Chart';
-import { useTheme } from '../store/useTheme';
+import { useThemeStore } from '../../store/useThemeStore';
 import { useBudgetStore } from '../../store/useBudgetStore';
 import { formatCurrency } from '../../utils/helpers';
 import { useFocusEffect } from '@react-navigation/native';
 
 const BudgetScreen = ({ navigation }) => {
-  const Colors = useTheme();
+  const Colors = useThemeStore();
   const [refreshing, setRefreshing] = useState(false);
   const { budgets, fetchBudgets, deleteBudget } = useBudgetStore();
 

@@ -12,7 +12,7 @@ import { Plus, TrendingUp, TrendingDown, Wallet, ChevronRight } from 'lucide-rea
 import { useFocusEffect } from '@react-navigation/native';
 import { Card } from '../../components/Card/Card';
 import { PieChart, BarChart, ProgressBar } from '../../components/Chart';
-import { useTheme } from '../store/useTheme';
+import { useThemeStore } from '../../store/useThemeStore';
 import { useTransactionStore } from '../../store/useTransactionStore';
 import { useWalletStore } from '../../store/useWalletStore';
 import { useSavingStore } from '../../store/useSavingStore';
@@ -20,7 +20,7 @@ import { TransactionRepository } from '../../data/repositories/TransactionReposi
 import { formatCurrency, getDateRange } from '../../utils/helpers';
 
 const HomeScreen = ({ navigation }) => {
-  const Colors = useTheme();
+  const Colors = useThemeStore();
   const [refreshing, setRefreshing] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 

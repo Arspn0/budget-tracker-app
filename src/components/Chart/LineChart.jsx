@@ -1,12 +1,12 @@
 import React from 'react';
 import { View, Text, Dimensions } from 'react-native';
 import { LineChart as RNLineChart } from 'react-native-chart-kit';
-import { useTheme } from '../store/useTheme';
+import { useThemeStore } from '../../store/useThemeStore';
 
 const { width } = Dimensions.get('window');
 
 export const LineChart = ({ data = [], title, color = Colors.primary }) => {
-  const Colors = useTheme();
+  const Colors = useThemeStore();
   
   if (!data || data.length === 0) {
     return (

@@ -2,10 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Animated, Vibration, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Delete, ArrowLeft } from 'lucide-react-native';
-import { useTheme } from '../store/useTheme';
+import { useThemeStore } from '../../store/useThemeStore';
 import { useSecurityStore } from '../../store/useSecurityStore';
-
-const Colors = useTheme();
 
 const PIN_LENGTH = 4;
 const Dot = ({ filled }) => (
@@ -18,7 +16,7 @@ const Dot = ({ filled }) => (
 const KEYS = ['1','2','3','4','5','6','7','8','9','','0','del'];
 
 export const SetupPinScreen = ({ navigation, route }) => {
-  const Colors = useTheme();
+  const Colors = useThemeStore();
   const isChange = route?.params?.isChange ?? false;
   const [step, setStep]         = useState(isChange ? 'verify' : 'enter');
   const [pin, setPin]           = useState('');

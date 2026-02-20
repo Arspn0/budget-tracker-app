@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput as RNTextInput, Text } from 'react-native';
-import { useTheme } from '../store/useTheme';
+import { useThemeStore } from '../../store/useThemeStore';
 
 export const TextInput = ({ 
   label, 
@@ -14,7 +14,7 @@ export const TextInput = ({
   icon,
   ...props 
 }) => {
-  const Colors = useTheme();
+  const Colors = useThemeStore();
   const [isFocused, setIsFocused] = useState(false);
 
   return (

@@ -5,11 +5,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Fingerprint, Delete } from 'lucide-react-native';
-import { useTheme } from '../store/useTheme';
+import { useThemeStore } from '../store/useThemeStore';
 import { useSecurityStore } from '../store/useSecurityStore';
 
 const PIN_LENGTH = 4;
-const Colors = useTheme();
 
 const Dot = ({ filled }) => (
   <View style={{
@@ -29,7 +28,7 @@ const PAD_KEYS = [
 ];
 
 const LockScreen = ({ onUnlock }) => {
-  const Colors = useTheme();
+  const Colors = useThemeStore();
 
   const [pin, setPin]           = useState('');
   const [error, setError]       = useState('');

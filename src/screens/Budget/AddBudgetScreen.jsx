@@ -10,13 +10,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SolidButton, OutlineButton } from '../../components/Button';
 import { Card } from '../../components/Card/Card';
-import { useTheme } from '../store/useTheme';
+import { useThemeStore } from '../../store/useThemeStore';
 import { useBudgetStore } from '../../store/useBudgetStore';
 import { useCategoryStore } from '../../store/useCategoryStore';
 import { formatCurrency } from '../../utils/helpers';
 
 const AddBudgetScreen = ({ navigation }) => {
-  const Colors = useTheme();
+  const Colors = useThemeStore();
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [limitAmount, setLimitAmount] = useState('');
   const [saving, setSaving] = useState(false);
