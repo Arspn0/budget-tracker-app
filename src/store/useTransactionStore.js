@@ -1,6 +1,48 @@
 import { create } from 'zustand';
 import { TransactionRepository } from '../data/repositories/TransactionRepository';
 import { WalletRepository } from '../data/repositories/WalletRepository';
+import { sendBudgetAlert } from '../utils/notificationUtils';
+import { useNotificationStore } from './useNotificationStore';
+import { BudgetRepository } from '../data/repositories/BudgetRepository'
+
+const checkBudgetAlert = async (transaction) => {
+  const { budgetAlertEnabled, budgetAlertThreshold } = useNotificationStore.getState();
+  
+  if (!budgetAlertEnabled || transaction.type !== 'expense') return;
+
+  try {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    // Get budget for this category this month
+    const budgets = await BudgetRepository.getByMonth(month, year);
+    const budget = budgets.find(b => b.category_id === transaction.category_id);
+
+    if (!budget) return;
+
+    // Get spent amount
+    const spent = await BudgetRepository.getSpentAmount(
+      budget.category_id,
+      month,
+      year
+    );
+
+    const percentage = (spent / budget.limit_amount) * 100;
+
+    // Send notification if threshold reached
+    if (percentage >= budgetAlertThreshold) {
+      await sendBudgetAlert({
+        categoryName: budget.category_name,
+        spent,
+        limit: budget.limit_amount,
+        percentage,
+      });
+    }
+  } catch (e) {
+    console.error('Error checking budget alert:', e);
+  }
+};
 
 export const useTransactionStore = create((set, get) => ({
   transactions: [],
@@ -41,29 +83,27 @@ export const useTransactionStore = create((set, get) => ({
     }
   },
 
-  // ─── FIX BUG 1: Update wallet balance when adding transaction ───
+  // ── Modify addTransaction() to include notification check ──
   addTransaction: async (transaction) => {
     set({ loading: true, error: null });
     try {
-      // 1. Insert the transaction
       await TransactionRepository.create(transaction);
 
-      // 2. Update wallet balance
-      //    income  → +amount  (saldo naik)
-      //    expense → -amount  (saldo turun)
-      const balanceDelta = transaction.type === 'income'
-        ? transaction.amount
+      // Update wallet balance
+      const delta = transaction.type === 'income' 
+        ? transaction.amount 
         : -transaction.amount;
+      await WalletRepository.updateBalance(transaction.wallet_id, delta);
 
-      await WalletRepository.updateBalance(transaction.wallet_id, balanceDelta);
+      // ✨ NEW: Check budget and send notification if needed
+      await checkBudgetAlert(transaction);
 
-      // 3. Refresh transactions list
       await get().fetchTransactions();
-
+    } catch (e) {
+      set({ error: e.message });
+      throw e;
+    } finally {
       set({ loading: false });
-    } catch (error) {
-      set({ error: error.message, loading: false });
-      throw error;
     }
   },
 
