@@ -17,6 +17,7 @@ import ReportScreen from '../screens/Report/ReportScreen';
 import FinancialCalendarScreen from '../screens/Calendar/FinancialCalendarScreen';
 import SecurityScreen from '../screens/Security/SecurityScreen';
 import { SetupPinScreen } from '../screens/Security/SetupPinScreen';
+import BackupScreen from '../screens/Backcup/BackupScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -122,6 +123,11 @@ const StackNav = () => {
         name="SetupPin"
         component={SetupPinScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="Backup"
+        component={BackupScreen}
+        options={{ title: 'Backup & Restore' }}
       />
     </Stack.Navigator>
   );
