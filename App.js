@@ -11,6 +11,11 @@ import { initDatabase } from './src/api/db';
 import { useSecurityStore } from './src/store/useSecurityStore';
 import { useAppStore } from './src/store/useAppStore';
 import LockScreen from './src/screens/LockScreen';
+import * as Notifications from 'expo-notifications';
+import { useEffect, useRef } from 'react';
+import { sendDailySummary } from './src/utils/notificationUtils';
+import { TransactionRepository } from './src/data/repositories/TransactionRepository';
+import { useNotificationStore } from './src/store/useNotificationStore';
 
 export default function App() {
   const [dbReady, setDbReady] = useState(false);
@@ -18,6 +23,9 @@ export default function App() {
 
   const { initSecurity, isPinSet, isLocked, lock } = useSecurityStore();
   const { isDarkMode, initTheme } = useAppStore();
+
+  const notificationListener = useRef();
+  const responseListener = useRef();
 
   // init db, security and theme
   useEffect(() => {
@@ -46,6 +54,70 @@ export default function App() {
     });
     return () => sub.remove();
   }, [isPinSet]);
+
+  useEffect(() => {
+    // Init notification settings
+    useNotificationStore.getState().initNotifications();
+
+    // Listener for foreground notifications
+    notificationListener.current = Notifications.addNotificationReceivedListener(
+      notification => {
+        console.log('Notification received:', notification);
+      }
+    );
+
+    // Listener for notification tap
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(
+      response => {
+        const data = response.notification.request.content.data;
+        
+        // Handle notification tap based on type
+        if (data.type === 'budget-alert') {
+          // Navigate to Budget screen
+          // navigation.navigate('Budget');
+        } else if (data.type === 'daily-summary') {
+          // Navigate to Transactions
+          // navigation.navigate('Main', { screen: 'Transactions' });
+        }
+      }
+    );
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener.current);
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
+
+  // ── Check and send daily summary at scheduled time ──
+  useEffect(() => {
+    const checkDailySummary = async () => {
+      const { dailySummaryEnabled } = useNotificationStore.getState();
+      if (!dailySummaryEnabled) return;
+
+      const today = new Date().toISOString().split('T')[0];
+      const transactions = await TransactionRepository.getByDateRange(today, today);
+
+      const income = transactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const expense = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      if (transactions.length > 0) {
+        await sendDailySummary({
+          income,
+          expense,
+          transactionCount: transactions.length,
+        });
+      }
+    };
+
+    // Check every hour for daily summary trigger
+    const interval = setInterval(checkDailySummary, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // loading app
   if (!dbReady && !dbError) {
