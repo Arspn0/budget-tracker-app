@@ -56,7 +56,7 @@ export const ProgressBar = ({
       {/* Bar Track */}
       <View style={{
         height,
-        backgroundColor: '#2A2D35',
+        backgroundColor: Colors.border,
         borderRadius: height / 2,
         overflow: 'hidden',
       }}>

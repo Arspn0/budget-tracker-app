@@ -1,54 +1,65 @@
 import React from 'react';
 import { TouchableOpacity, Text } from 'react-native';
+import { useThemeStore } from '../../store/useThemeStore';
 
 export const OutlineButton = ({ 
-  title, 
-  onPress, 
+  title,
+  onPress,
   disabled = false,
-  variant = 'primary',
-  size = 'medium',
+  loading = false,
+  variant = 'primary', // primary | success | danger | warning
   style,
-  textStyle 
+  textStyle,
+  ...props
 }) => {
-  const variants = {
-    primary: 'border-primary',
-    danger: 'border-danger',
-    success: 'border-success',
+  const Colors = useThemeStore();
+
+  const variantColors = {
+    primary: Colors.primary,
+    success: Colors.success,
+    danger:  Colors.danger,
+    warning: Colors.warning,
   };
 
-  const textVariants = {
-    primary: 'text-primary',
-    danger: 'text-danger',
-    success: 'text-success',
-  };
-
-  const sizes = {
-    small: 'py-2 px-4',
-    medium: 'py-3 px-6',
-    large: 'py-4 px-8',
-  };
+  const color = variantColors[variant] || Colors.primary;
 
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={disabled}
-      className={`
-        ${variants[variant]} 
-        ${sizes[size]} 
-        rounded-2xl 
-        border-2
-        items-center 
-        justify-center
-        ${disabled ? 'opacity-50' : ''}
-      `}
-      style={style}
+      disabled={disabled || loading}
+      style={[
+        {
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderColor: color,
+          borderRadius: 12,
+          paddingVertical: 12,
+          paddingHorizontal: 20,
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: (disabled || loading) ? 0.5 : 1,
+        },
+        style,
+      ]}
+      activeOpacity={0.7}
+      {...props}
     >
-      <Text 
-        className={`${textVariants[variant]} font-semibold text-base`}
-        style={textStyle}
-      >
-        {title}
-      </Text>
+      {loading ? (
+        <ActivityIndicator size="small" color={color} />
+      ) : (
+        <Text
+          style={[
+            {
+              color: color,
+              fontSize: 16,
+              fontWeight: '600',
+            },
+            textStyle,
+          ]}
+        >
+          {title}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 };
