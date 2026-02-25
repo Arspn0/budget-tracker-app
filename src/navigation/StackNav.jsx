@@ -18,6 +18,7 @@ import FinancialCalendarScreen from '../screens/Calendar/FinancialCalendarScreen
 import SecurityScreen from '../screens/Security/SecurityScreen';
 import { SetupPinScreen } from '../screens/Security/SetupPinScreen';
 import BackupScreen from '../screens/Backup/BackupScreen';
+import NotificationSettingsScreen from '../screens/Notifications/NotificationsSettingsScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -113,7 +114,7 @@ const StackNav = () => {
         options={{ title: 'Kalender Finansial' }}
       />
 
-      {/* Security & Setup Pin */}
+      {/* Security, Setup Pin & Backup */}
       <Stack.Screen
         name="Security"
         component={SecurityScreen}
@@ -128,6 +129,13 @@ const StackNav = () => {
         name="Backup"
         component={BackupScreen}
         options={{ title: 'Backup & Restore' }}
+      />
+
+      {/* Notification */}
+      <Stack.Screen 
+        name="NotificationSettings" 
+        component={NotificationSettingsScreen} 
+        options={{ title: 'Notifikasi' }} 
       />
     </Stack.Navigator>
   );
