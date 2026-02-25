@@ -10,16 +10,6 @@ import { useSecurityStore } from '../store/useSecurityStore';
 
 const PIN_LENGTH = 4;
 
-const Dot = ({ filled }) => (
-  <View style={{
-    width: 16, height: 16, borderRadius: 8,
-    marginHorizontal: 10,
-    backgroundColor: filled ? Colors.primary : 'transparent',
-    borderWidth: 2,
-    borderColor: filled ? Colors.primary : '#4A4D5A',
-  }} />
-);
-
 const PAD_KEYS = [
   '1','2','3',
   '4','5','6',
@@ -85,6 +75,16 @@ const LockScreen = ({ onUnlock }) => {
     if (key === 'bio') { handleBiometric(); return; }
     if (pin.length < PIN_LENGTH) { setPin(p => p + key); setError(''); }
   };
+
+  const Dot = ({ filled }) => (
+    <View style={{
+      width: 16, height: 16, borderRadius: 8,
+      marginHorizontal: 10,
+      backgroundColor: filled ? Colors.primary : 'transparent',
+      borderWidth: 2,
+      borderColor: filled ? Colors.primary : '#4A4D5A',
+    }} />
+  );
 
   const showBio = isBiometricEnabled && isBiometricSupported;
 
