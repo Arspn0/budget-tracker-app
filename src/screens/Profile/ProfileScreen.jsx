@@ -136,7 +136,7 @@ const ProfileScreen = ({ navigation }) => {
           icon: Database,
           label: 'Backup & Restore',
           subtitle: 'Sinkronisasi data',
-          onPress: () => Alert.alert('Coming Soon', 'Fitur backup akan segera hadir'),
+          onPress: () => navigation.navigate('Backup'),
           iconColor: '#8BC34A',
         },
       ],
