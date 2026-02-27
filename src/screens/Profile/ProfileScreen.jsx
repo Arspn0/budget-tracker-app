@@ -96,7 +96,15 @@ const ProfileScreen = ({ navigation }) => {
           icon: Bell,
           label: 'Notifikasi',
           subtitle: 'Budget alerts, reminders, summary',
-          onPress: () => navigation.navigate('NotificationSettings'),
+          trailing: (
+            <Switch
+              value={notifEnabled}
+              onValueChange={setNotifEnabled}
+              trackColor={{ false: '#2A2D35', true: Colors.primary + '80' }}
+              thumbColor={notifEnabled ? Colors.primary : '#9FA5B4'}
+            />
+          ),
+          // onPress: () => navigation.navigate('NotificationSettings'),
           iconColor: '#4ECDC4',
         },
         {
