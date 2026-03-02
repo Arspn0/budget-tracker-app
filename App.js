@@ -1,7 +1,7 @@
 import './global.css';
 
 import 'react-native-gesture-handler';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, ActivityIndicator, AppState } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
@@ -12,7 +12,6 @@ import { useSecurityStore } from './src/store/useSecurityStore';
 import { useAppStore } from './src/store/useAppStore';
 import LockScreen from './src/screens/LockScreen';
 import * as Notifications from 'expo-notifications';
-import { useEffect, useRef } from 'react';
 import { sendDailySummary } from './src/utils/notificationUtils';
 import { TransactionRepository } from './src/data/repositories/TransactionRepository';
 import { useNotificationStore } from './src/store/useNotificationStore';
